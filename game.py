@@ -43,7 +43,7 @@ def circle(x,y,color):
     r = y//h_cell
     left = c*w_cell
     top = r*h_cell
-    pygame.draw.circle(window,color,(left+w_cell/2,top+h_cell/2),w_cell/2)
+    pygame.draw.circle(window,color,(left+w_cell/2,top+h_cell/2),w_cell/2-2)
 class Board:
     def __init__(self):
         self.board = [[0]*COL for i in range(ROW)]
@@ -69,13 +69,27 @@ def draw_board():
 
 def check_win_piece_list(pieces):
     assert isinstance(pieces,list)
-    assert len(pieces)==9
-    for i in range(len(pieces)-5):
+    assert len(pieces)<=9
+    for i in range(len(pieces)-4):
+        print("asjdklasjdklasdjk",sum(pieces[i:i+5]) , -turn*5)
         if sum(pieces[i:i+5]) == turn*5:
             return True
     return False
 def check_win(row,col):
-    pass
+    row_pieces = BOARD.board[row][(col-4 if col-4>=0 else 0):(col+5)]
+    col_pieces = [i[col] for i in BOARD.board[(row-4 if row-4>=0 else 0):(row+5)]]
+    # print("sadasd0",-min(min(row,col),4),COL)
+    # print("sadasd1",0,min(min(ROW-row,COL-col),4))
+    # print("sadasd2",-min(min(row,col),4),min(min(ROW-row,COL-col)),4)
+    # print("sadasd3",range(-min(min(row,col),4),min(min(ROW-row,COL-col)),4)+1)
+    print("asdas",-min(min(row,col),4),min(min(ROW-row-1,COL-col-1),4)+1,ROW-row-1,COL-col-1)
+    lu2rb_pieces = [BOARD.board[row+i][col+i] for i in range(-min(min(row,col),4),min(min(ROW-row-1,COL-col-1),4)+1)]
+    ru2lb_pieces = [BOARD.board[row+i][col-i] for i in range(-min(min(row,COL-col-1),4),min(min(ROW-row-1,col),4)+1)]
+    print(row_pieces)
+    print(col_pieces)
+    print(lu2rb_pieces)
+    print(ru2lb_pieces)
+    return check_win_piece_list(row_pieces) or check_win_piece_list(col_pieces) or check_win_piece_list(lu2rb_pieces) or check_win_piece_list(ru2lb_pieces)
 
 while quit:
     for event in pygame.event.get():
@@ -87,6 +101,11 @@ while quit:
                 if pressed_array[index]:
                     if index==0:
                         tx , ty = pygame.mouse.get_pos()
+                        tc = int(tx//w_cell)
+                        tr = int(ty//h_cell)
+                        if BOARD.board[tr][tc]!=0:
+                            print("you can't")
+                            continue
                         if turn == AI_FLAG:
                             color_t = (255,255,255)
                             turn = PLAYER_FLAG
@@ -95,7 +114,8 @@ while quit:
                             turn = AI_FLAG
                         BOARD.step(tx,ty,turn)
                         circle(tx,ty,color_t)
-                        print(BOARD.board)
+                        if check_win(tr,tc):
+                            print("win")
 
     # print(pygame.mouse.get_pos())
     # print(pygame.mouse.get_focused())
