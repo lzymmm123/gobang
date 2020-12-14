@@ -14,10 +14,10 @@ class Point:
 
 
 pygame.init()
-w = 800
-h = 800
-ROW = 10
-COL = 10
+w = 1000
+h = 1000
+ROW = 40
+COL = 40
 size = (w,h)
 direct = "left"
 window = pygame.display.set_mode(size)
@@ -78,19 +78,12 @@ def check_win_piece_list(pieces):
 def check_win(row,col):
     row_pieces = BOARD.board[row][(col-4 if col-4>=0 else 0):(col+5)]
     col_pieces = [i[col] for i in BOARD.board[(row-4 if row-4>=0 else 0):(row+5)]]
-    # print("sadasd0",-min(min(row,col),4),COL)
-    # print("sadasd1",0,min(min(ROW-row,COL-col),4))
-    # print("sadasd2",-min(min(row,col),4),min(min(ROW-row,COL-col)),4)
-    # print("sadasd3",range(-min(min(row,col),4),min(min(ROW-row,COL-col)),4)+1)
-    print("asdas",-min(min(row,col),4),min(min(ROW-row-1,COL-col-1),4)+1,ROW-row-1,COL-col-1)
     lu2rb_pieces = [BOARD.board[row+i][col+i] for i in range(-min(min(row,col),4),min(min(ROW-row-1,COL-col-1),4)+1)]
     ru2lb_pieces = [BOARD.board[row+i][col-i] for i in range(-min(min(row,COL-col-1),4),min(min(ROW-row-1,col),4)+1)]
-    print(row_pieces)
-    print(col_pieces)
-    print(lu2rb_pieces)
-    print(ru2lb_pieces)
     return check_win_piece_list(row_pieces) or check_win_piece_list(col_pieces) or check_win_piece_list(lu2rb_pieces) or check_win_piece_list(ru2lb_pieces)
 
+previous_r = -1
+previous_c = -1
 while quit:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -99,10 +92,10 @@ while quit:
             pressed_array = pygame.mouse.get_pressed()
             for index in range(len(pressed_array)):
                 if pressed_array[index]:
+                    tx , ty = pygame.mouse.get_pos()
+                    tc = int(tx//w_cell)
+                    tr = int(ty//h_cell)
                     if index==0:
-                        tx , ty = pygame.mouse.get_pos()
-                        tc = int(tx//w_cell)
-                        tr = int(ty//h_cell)
                         if BOARD.board[tr][tc]!=0:
                             print("you can't")
                             continue
@@ -116,6 +109,11 @@ while quit:
                         circle(tx,ty,color_t)
                         if check_win(tr,tc):
                             print("win")
+                    elif index==2:
+                        if BOARD.board[tr][tc]!=0 and tr==previous_r and tc==previous_c:
+                            pass
+
+
 
     # print(pygame.mouse.get_pos())
     # print(pygame.mouse.get_focused())
