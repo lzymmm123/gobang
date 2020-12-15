@@ -1,5 +1,6 @@
 import pygame
 from pygame.locals import *
+import re
 
 
 class Point:
@@ -11,7 +12,97 @@ class Point:
     def copy(self):
         return Point(self.row,self.col)
 
+def eval(pieces,flag):
+    assert isinstance(pieces,list)
+    s=""
+    # score_map = {
+            # "11111":100000, #长连
+            # "011110":10000, #活四
+            # "011112":10000,     #冲四
+            # "0101110":10000,    #冲四
+            # "0110110":10000,    #冲四
+            # "01110":200,      #活三
+            # "010110":200,     #活三
+            # "001112" :50, #眠三
+            # "010112":50, #眠三
+            # "011012":50, #眠三
+            # "10011":50, #眠三
+            # "10101":50, #眠三
+            # "2011102":50, #眠三
+            # "00110":5, #活二
+            # "01010":5, #活二
+            # "010010":5, #活二
+            # "000112":3,#眠二
+            # "001012":3,#眠二
+            # "010012":3,#眠二
+            # "10001":3,#眠二
+            # "2010102":3,#眠二
+            # "2011002":3,#眠二
+            # "211112":-5,#死四
+            # "21112":-5,#死三
+            # "2112":-5 #死二
+            # }
+    score_map = {
+            "01": 17,#眠1连
+            "001": 17,#眠1连
+            "0001": 17,#眠1连
+            
+            "0102":17,#眠1连，15
+            "0012":15,#眠1连，15
+            "01002":19,#眠1连，15
+            "00102":17,#眠1连，15
+            "00012":15,#眠1连，15
 
+            "01000":21,#活1连，15
+            "00100":19,#活1连，15
+            "00010":17,#活1连，15
+            "00001":15,#活1连，15
+
+            #被堵住
+            "0101":65,#眠2连，40
+            "0110":65,#眠2连，40
+            "011":65,#眠2连，40
+            "0011":65,#眠2连，40
+            
+            "01012":65,#眠2连，40
+            "01102":65,#眠2连，40
+            "00112":65,#眠2连，40
+
+            "01010":75,#活2连，40
+            "01100":75,#活2连，40
+            "00110":75,#活2连，40
+            "00011":75,#活2连，40
+            
+            #被堵住
+            "0111":150,#眠3连，100
+            
+            "01112":150,#眠3连，100
+            
+            "01101":1000,#活3连，130
+            "01011":1000,#活3连，130
+            "01110": 1000,#活3连
+            
+            "01111":3000,#4连，300
+            }
+
+    for i in pieces:
+        if i == 0:
+            s+="0"
+        elif i == PLAYER_FLAG:
+            s+="1"
+        elif i == AI_FLAG:
+            s+="2"
+    for k,v in score_map:
+        if re.search(k,s) is not None:
+            print(s,v)
+    return s
+
+class AI:
+    def __init__(self,flag):
+        self.path = []
+        self.flag = flag
+    def expand(self,depth):
+        pass
 
 pygame.init()
 w = 1000
@@ -71,7 +162,6 @@ def check_win_piece_list(pieces):
     assert isinstance(pieces,list)
     assert len(pieces)<=9
     for i in range(len(pieces)-4):
-        print("asjdklasjdklasdjk",sum(pieces[i:i+5]) , -turn*5)
         if sum(pieces[i:i+5]) == turn*5:
             return True
     return False
@@ -80,6 +170,7 @@ def check_win(row,col):
     col_pieces = [i[col] for i in BOARD.board[(row-4 if row-4>=0 else 0):(row+5)]]
     lu2rb_pieces = [BOARD.board[row+i][col+i] for i in range(-min(min(row,col),4),min(min(ROW-row-1,COL-col-1),4)+1)]
     ru2lb_pieces = [BOARD.board[row+i][col-i] for i in range(-min(min(row,COL-col-1),4),min(min(ROW-row-1,col),4)+1)]
+    print(eval(row_pieces))
     return check_win_piece_list(row_pieces) or check_win_piece_list(col_pieces) or check_win_piece_list(lu2rb_pieces) or check_win_piece_list(ru2lb_pieces)
 
 previous_r = -1
