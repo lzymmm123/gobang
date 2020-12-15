@@ -1,6 +1,7 @@
 import pygame
 from pygame.locals import *
 import re
+import numpy as np
 
 
 class Point:
@@ -12,8 +13,51 @@ class Point:
     def copy(self):
         return Point(self.row,self.col)
 
-def eval(pieces,flag):
-    assert isinstance(pieces,list)
+score_map = {
+        "01": 17,#眠1连
+        "001": 17,#眠1连
+        "0001": 17,#眠1连
+        
+        "0102":17,#眠1连，15
+        "0012":15,#眠1连，15
+        "01002":19,#眠1连，15
+        "00102":17,#眠1连，15
+        "00012":15,#眠1连，15
+
+        "01000":21,#活1连，15
+        "00100":19,#活1连，15
+        "00010":17,#活1连，15
+        "00001":15,#活1连，15
+
+        #被堵住
+        "0101":65,#眠2连，40
+        "0110":65,#眠2连，40
+        "011":65,#眠2连，40
+        "0011":65,#眠2连，40
+        
+        "01012":65,#眠2连，40
+        "01102":65,#眠2连，40
+        "00112":65,#眠2连，40
+
+        "01010":75,#活2连，40
+        "01100":75,#活2连，40
+        "00110":75,#活2连，40
+        "00011":75,#活2连，40
+        
+        #被堵住
+        "0111":150,#眠3连，100
+        
+        "01112":150,#眠3连，100
+        
+        "01101":1000,#活3连，130
+        "01011":1000,#活3连，130
+        "01110": 1000,#活3连
+        
+        "01111":3000,#4连，300
+        }
+
+def eval(pieces,flag=0):
+    # assert isinstance(pieces,np.ndarray)
     s=""
     # score_map = {
             # "11111":100000, #长连
@@ -42,75 +86,68 @@ def eval(pieces,flag):
             # "21112":-5,#死三
             # "2112":-5 #死二
             # }
-    score_map = {
-            "01": 17,#眠1连
-            "001": 17,#眠1连
-            "0001": 17,#眠1连
-            
-            "0102":17,#眠1连，15
-            "0012":15,#眠1连，15
-            "01002":19,#眠1连，15
-            "00102":17,#眠1连，15
-            "00012":15,#眠1连，15
-
-            "01000":21,#活1连，15
-            "00100":19,#活1连，15
-            "00010":17,#活1连，15
-            "00001":15,#活1连，15
-
-            #被堵住
-            "0101":65,#眠2连，40
-            "0110":65,#眠2连，40
-            "011":65,#眠2连，40
-            "0011":65,#眠2连，40
-            
-            "01012":65,#眠2连，40
-            "01102":65,#眠2连，40
-            "00112":65,#眠2连，40
-
-            "01010":75,#活2连，40
-            "01100":75,#活2连，40
-            "00110":75,#活2连，40
-            "00011":75,#活2连，40
-            
-            #被堵住
-            "0111":150,#眠3连，100
-            
-            "01112":150,#眠3连，100
-            
-            "01101":1000,#活3连，130
-            "01011":1000,#活3连，130
-            "01110": 1000,#活3连
-            
-            "01111":3000,#4连，300
-            }
-
     for i in pieces:
         if i == 0:
             s+="0"
         elif i == PLAYER_FLAG:
-            s+="1"
-        elif i == AI_FLAG:
             s+="2"
-    for k,v in score_map:
-        if re.search(k,s) is not None:
-            print(s,v)
-    return s
+        elif i == AI_FLAG:
+            s+="1"
+    rs = s[::-1]
+    max_score = -1
+    min_score = 10000000
+    for k,v in score_map.items():
+        if re.search(k,s) is not None or re.search(k,rs) is not None:
+            if v > max_score:
+                max_score = v
+            if v < min_score:
+                min_score = v
+    return max_score,min_score
 
-class AI:
-    def __init__(self,flag):
-        self.path = []
-        self.flag = flag
-    def expand(self,depth):
-        pass
-
-pygame.init()
 w = 1000
 h = 1000
 ROW = 40
 COL = 40
 size = (w,h)
 direct = "left"
+FOCUS_BOARD_MIN_X = 0
+FOCUS_BOARD_MIN_Y = 0
+FOCUS_BOARD_MAX_X = COL
+FOCUS_BOARD_MAX_Y = ROW
+
+
+def get_enabled_place(board):
+    ay,ax = np.where(board!=0)
+    search_min_x = max(min(ax) - 1,0)
+    search_max_x = min(max(ax) + 1,COL-1)
+    search_min_y = max(min(ay) - 1,0)
+    search_max_y = min(max(ay) + 1,ROW-1)
+    enabled_place = []
+    for i in range(search_min_y,search_max_y):
+        for j in range(search_min_x,search_max_x):
+            if board[i][j] == 0 :
+                enabled_place.push((i,j))
+    return enabled_place
+def negamax(board,alpha,beta,row,col,flag):
+    if(check_win(board,row,col)): return 100000000
+    v = float("-inf")
+    enabled_place = get_enabled_place(board)
+    for place in enabled_place:
+        r = place[0]
+        c = place[1]
+        board_next = board.copy()
+        # TODO: improve negamax;complete recursion
+        # board_next[r][c] = turn
+    pass
+class AI:
+    def __init__(self,flag):
+        self.path = []
+        self.flag = flag
+    def expand(self,depth):
+        enabled_place = self.get_enabled_place(BOARD.board)
+        pass
+
+pygame.init()
 window = pygame.display.set_mode(size)
 bg = pygame.image.load("./bg.jpg").convert_alpha()
 bg = pygame.transform.smoothscale(bg,(w,h))
@@ -137,11 +174,12 @@ def circle(x,y,color):
     pygame.draw.circle(window,color,(left+w_cell/2,top+h_cell/2),w_cell/2-2)
 class Board:
     def __init__(self):
-        self.board = [[0]*COL for i in range(ROW)]
-    def step(self,x,y,flag):
-        ct = int(x//w_cell)
-        rt = int(y//h_cell)
-        print(rt,ct)
+        # self.board = [[0]*COL for i in range(ROW)]
+        self.board = np.zeros((ROW,COL))
+    def step(self,ct,rt,flag):
+        # ct = int(x//w_cell)
+        # rt = int(y//h_cell)
+        print("place",rt,ct)
         self.board[rt][ct] = flag
 
 
@@ -159,17 +197,18 @@ def draw_board():
         pygame.draw.line(window,(255,255,255),(0,i*h_cell),(h,i*h_cell))
 
 def check_win_piece_list(pieces):
-    assert isinstance(pieces,list)
-    assert len(pieces)<=9
+    # assert isinstance(pieces,list)
+    # assert len(pieces)<=9
     for i in range(len(pieces)-4):
         if sum(pieces[i:i+5]) == turn*5:
             return True
     return False
-def check_win(row,col):
-    row_pieces = BOARD.board[row][(col-4 if col-4>=0 else 0):(col+5)]
-    col_pieces = [i[col] for i in BOARD.board[(row-4 if row-4>=0 else 0):(row+5)]]
-    lu2rb_pieces = [BOARD.board[row+i][col+i] for i in range(-min(min(row,col),4),min(min(ROW-row-1,COL-col-1),4)+1)]
-    ru2lb_pieces = [BOARD.board[row+i][col-i] for i in range(-min(min(row,COL-col-1),4),min(min(ROW-row-1,col),4)+1)]
+def check_win(board,row,col):
+    row_pieces = board[row][(col-4 if col-4>=0 else 0):(col+5)]
+    eval(row_pieces)
+    col_pieces = [i[col] for i in board[(row-4 if row-4>=0 else 0):(row+5)]]
+    lu2rb_pieces = [board[row+i][col+i] for i in range(-min(min(row,col),4),min(min(ROW-row-1,COL-col-1),4)+1)]
+    ru2lb_pieces = [board[row+i][col-i] for i in range(-min(min(row,COL-col-1),4),min(min(ROW-row-1,col),4)+1)]
     print(eval(row_pieces))
     return check_win_piece_list(row_pieces) or check_win_piece_list(col_pieces) or check_win_piece_list(lu2rb_pieces) or check_win_piece_list(ru2lb_pieces)
 
@@ -196,9 +235,9 @@ while quit:
                         elif turn == PLAYER_FLAG:
                             color_t = (0,0,0)
                             turn = AI_FLAG
-                        BOARD.step(tx,ty,turn)
+                        BOARD.step(tc,tr,turn)
                         circle(tx,ty,color_t)
-                        if check_win(tr,tc):
+                        if check_win(BOARD.board,tr,tc):
                             print("win")
                     elif index==2:
                         if BOARD.board[tr][tc]!=0 and tr==previous_r and tc==previous_c:
