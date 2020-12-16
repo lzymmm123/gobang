@@ -56,7 +56,7 @@ score_map = {
         "01111":3000,#4连，300
         }
 
-def eval(pieces,flag=0):
+def eval(pieces,flag=AI_FLAG):
     # assert isinstance(pieces,np.ndarray)
     s=""
     # score_map = {
@@ -128,23 +128,62 @@ def get_enabled_place(board):
             if board[i][j] == 0 :
                 enabled_place.push((i,j))
     return enabled_place
-def negamax(board,alpha,beta,row,col,flag):
-    if(check_win(board,row,col)): return 100000000
-    v = float("-inf")
+def neflag(flag):
+    if flag==AI_FLAG:
+        return PLAYER_FLAG
+    elif flag==PLAYER_FLAG:
+        return AI_FLAG
+def get_eval(board,row,col,flag):
+    #TODO: config how to eval
+    row_pieces = board[row][(col-4 if col-4>=0 else 0):(col+5)]
+    eval(row_pieces)
+    col_pieces = [i[col] for i in board[(row-4 if row-4>=0 else 0):(row+5)]]
+    lu2rb_pieces = [board[row+i][col+i] for i in range(-min(min(row,col),4),min(min(ROW-row-1,COL-col-1),4)+1)]
+    ru2lb_pieces = [board[row+i][col-i] for i in range(-min(min(row,COL-col-1),4),min(min(ROW-row-1,col),4)+1)]
+    print(eval(row_pieces))
+    return check_win_piece_list(row_pieces,flag) or check_win_piece_list(col_pieces,flag) or check_win_piece_list(lu2rb_pieces,flag) or check_win_piece_list(ru2lb_pieces,flag)
+MAX_DEPTH = 4
+AI_BEST_MOVE = None
+def alpha_beta(board,depth,alpha,beta,row,col,flag):
+    #TODO: config how to eval
+    if check_win(board,row,col,flag) : 
+        return 100000000
+    if depth == 0:
+        return get_eval(board,row,col,flag)
     enabled_place = get_enabled_place(board)
-    for place in enabled_place:
-        r = place[0]
-        c = place[1]
-        board_next = board.copy()
-        # TODO: improve negamax;complete recursion
-        # board_next[r][c] = turn
-    pass
+    if flag==AI_FLAG: #AI MAX
+        for place in enabled_place:
+            r = place[0]
+            c = place[1]
+            board_next = board.copy()
+            board_next[r][c] = PLAYER_FLAG
+            value = alpha_beta(board_next,depth-1,alpha,beta,r,c,neflag(flag))
+            if value > alpha:
+                alpha = value
+                if depth == MAX_DEPTH:
+                    AI_BEST_MOVE = place
+            if beta <= alpha:
+                break
+        return alpha
+    else:#PLAYER MIN
+        for place in enabled_place:
+            r = place[0]
+            c = place[1]
+            board_next = board.copy()
+            board_next[r][c] = AI_FLAG
+            value = alpha_beta(board_next,depth-1,alpha,beta,r,c,neflag(flag))
+            if value < beta:
+                beta = value
+                if depth == MAX_DEPTH:
+                    AI_BEST_MOVE = place
+            if beta <= alpha:
+                break
+        return beta
 class AI:
     def __init__(self,flag):
         self.path = []
         self.flag = flag
     def expand(self,depth):
-        enabled_place = self.get_enabled_place(BOARD.board)
         pass
 
 pygame.init()
@@ -196,24 +235,24 @@ def draw_board():
     for i in range(ROW):
         pygame.draw.line(window,(255,255,255),(0,i*h_cell),(h,i*h_cell))
 
-def check_win_piece_list(pieces):
+def check_win_piece_list(pieces,flag):
     # assert isinstance(pieces,list)
     # assert len(pieces)<=9
     for i in range(len(pieces)-4):
-        if sum(pieces[i:i+5]) == turn*5:
+        if sum(pieces[i:i+5]) == flag*5:
             return True
     return False
-def check_win(board,row,col):
+def check_win(board,row,col,flag):
     row_pieces = board[row][(col-4 if col-4>=0 else 0):(col+5)]
     eval(row_pieces)
     col_pieces = [i[col] for i in board[(row-4 if row-4>=0 else 0):(row+5)]]
     lu2rb_pieces = [board[row+i][col+i] for i in range(-min(min(row,col),4),min(min(ROW-row-1,COL-col-1),4)+1)]
     ru2lb_pieces = [board[row+i][col-i] for i in range(-min(min(row,COL-col-1),4),min(min(ROW-row-1,col),4)+1)]
-    print(eval(row_pieces))
-    return check_win_piece_list(row_pieces) or check_win_piece_list(col_pieces) or check_win_piece_list(lu2rb_pieces) or check_win_piece_list(ru2lb_pieces)
+    return check_win_piece_list(row_pieces,flag) or check_win_piece_list(col_pieces,flag) or check_win_piece_list(lu2rb_pieces,flag) or check_win_piece_list(ru2lb_pieces,flag)
 
 previous_r = -1
 previous_c = -1
+print("now turn ",("AI " if turn==AI_FLAG else "PLAYER"))
 while quit:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -230,15 +269,19 @@ while quit:
                             print("you can't")
                             continue
                         if turn == AI_FLAG:
-                            color_t = (255,255,255)
-                            turn = PLAYER_FLAG
+                            color_t = AI_COLOR
+                            alpha_beta(BOARD.board,MAX_DEPTH,float("-inf"),float("inf"),)
                         elif turn == PLAYER_FLAG:
-                            color_t = (0,0,0)
-                            turn = AI_FLAG
+                            color_t = PLAYER_COLOR
                         BOARD.step(tc,tr,turn)
                         circle(tx,ty,color_t)
-                        if check_win(BOARD.board,tr,tc):
-                            print("win")
+                        if check_win(BOARD.board,tr,tc,turn):
+                            print(("AI" if turn==AI_FLAG else "PLAYER"),"win")
+                        if turn == AI_FLAG:
+                            turn = PLAYER_FLAG
+                        elif turn == PLAYER_FLAG:
+                            turn = AI_FLAG
+                        print("now turn ",("AI " if turn==AI_FLAG else "PLAYER"))
                     elif index==2:
                         if BOARD.board[tr][tc]!=0 and tr==previous_r and tc==previous_c:
                             pass
