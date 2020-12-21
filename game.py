@@ -56,7 +56,7 @@ score_map = {
         "01111":3000,#4连，300
         }
 
-def eval(pieces,flag=AI_FLAG):
+def eval(pieces,flag=-1):
     # assert isinstance(pieces,np.ndarray)
     s=""
     # score_map = {
@@ -270,7 +270,7 @@ while quit:
                             continue
                         if turn == AI_FLAG:
                             color_t = AI_COLOR
-                            alpha_beta(BOARD.board,MAX_DEPTH,float("-inf"),float("inf"),)
+                            # alpha_beta(BOARD.board,MAX_DEPTH,float("-inf"),float("inf"),)
                         elif turn == PLAYER_FLAG:
                             color_t = PLAYER_COLOR
                         BOARD.step(tc,tr,turn)
