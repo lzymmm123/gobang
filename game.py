@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 import re
 import numpy as np
+from scipy.signal import convolve2d
 
 
 class Point:
@@ -13,47 +14,84 @@ class Point:
     def copy(self):
         return Point(self.row,self.col)
 
+fliter5_maps = [
+        np.identity(5),
+        np.flip(np.identity(5),0),
+        np.array([[1,1,1,1,1]]),
+        np.array([ [1], [1], [1], [1], [1] ])
+        ]
+fliter4_maps = [
+        np.identity(4),
+        np.flip(np.identity(4),0),
+        np.array([[1,1,1,1]]),
+        np.array([ [1], [1], [1], [1] ])
+        ]
+
+fliter3_maps = [
+        np.identity(3),
+        np.flip(np.identity(3),0),
+        np.array([[1,1,1]]),
+        np.array([ [1], [1], [1] ])
+        ]
+fliter2_maps = [
+        np.identity(2),
+        np.flip(np.identity(2),0),
+        np.array([[1,1]]),
+        np.array([ [1], [1] ])
+        ]
 score_map = {
-        "01": 17,#眠1连
-        "001": 17,#眠1连
-        "0001": 17,#眠1连
-        
-        "0102":17,#眠1连，15
-        "0012":15,#眠1连，15
-        "01002":19,#眠1连，15
-        "00102":17,#眠1连，15
-        "00012":15,#眠1连，15
+        "11111":10000, #AI连五
+        "22222":-10000, #PLAYER 连五
+        "022220":-9050,
+        "122220":-9040,
+        "0222020":-9040,
+        "0220220":-9040,
+        "011110":9030,
+        "211110":9020,
+        "0111010":9020,
+        "0110110":9020,
 
-        "01000":21,#活1连，15
-        "00100":19,#活1连，15
-        "00010":17,#活1连，15
-        "00001":15,#活1连，15
+        # "01": 17,#眠1连
+        # "001": 17,#眠1连
+        # "0001": 17,#眠1连
+        
+        # "0102":16,#眠1连，15
+        # "0012":15,#眠1连，15
+        # "01002":19,#眠1连，15
+        # "00102":17,#眠1连，15
+        # "00012":12,#眠1连，15
 
-        #被堵住
-        "0101":65,#眠2连，40
-        "0110":65,#眠2连，40
-        "011":65,#眠2连，40
-        "0011":65,#眠2连，40
-        
-        "01012":65,#眠2连，40
-        "01102":65,#眠2连，40
-        "00112":65,#眠2连，40
+        # "01000":21,#活1连，15
+        # "00100":19,#活1连，15
+        # "00010":17,#活1连，15
+        # "00001":15,#活1连，15
 
-        "01010":75,#活2连，40
-        "01100":75,#活2连，40
-        "00110":75,#活2连，40
-        "00011":75,#活2连，40
+        # #被堵住
+        # "0101":65,#眠2连，40
+        # "0110":65,#眠2连，40
+        # "011":65,#眠2连，40
+        # "0011":65,#眠2连，40
         
-        #被堵住
-        "0111":150,#眠3连，100
+        # "01012":65,#眠2连，40
+        # "01102":65,#眠2连，40
+        # "00112":65,#眠2连，40
+
+        # "01010":75,#活2连，40
+        # "01100":75,#活2连，40
+        # "00110":75,#活2连，40
+        # "00011":75,#活2连，40
         
-        "01112":150,#眠3连，100
+        # #被堵住
+        # "0111":150,#眠3连，100
         
-        "01101":1000,#活3连，130
-        "01011":1000,#活3连，130
-        "01110": 1000,#活3连
+        # "01112":150,#眠3连，100
         
-        "01111":3000,#4连，300
+        # "01101":1000,#活3连，130
+        # "01011":1000,#活3连，130
+        # "01110": 1000,#活3连
+        
+        # "01111":3000,#4连，300
+        # "11111":100000,
         }
 
 def eval(pieces,flag=-1):
@@ -106,8 +144,8 @@ def eval(pieces,flag=-1):
 
 w = 1000
 h = 1000
-ROW = 40
-COL = 40
+ROW = 20
+COL = 20
 size = (w,h)
 direct = "left"
 FOCUS_BOARD_MIN_X = 0
@@ -126,7 +164,7 @@ def get_enabled_place(board):
     for i in range(search_min_y,search_max_y):
         for j in range(search_min_x,search_max_x):
             if board[i][j] == 0 :
-                enabled_place.push((i,j))
+                enabled_place.append((i,j))
     return enabled_place
 def neflag(flag):
     if flag==AI_FLAG:
@@ -136,21 +174,45 @@ def neflag(flag):
 def get_eval(board,row,col,flag):
     #TODO: config how to eval
     row_pieces = board[row][(col-4 if col-4>=0 else 0):(col+5)]
-    eval(row_pieces)
     col_pieces = [i[col] for i in board[(row-4 if row-4>=0 else 0):(row+5)]]
     lu2rb_pieces = [board[row+i][col+i] for i in range(-min(min(row,col),4),min(min(ROW-row-1,COL-col-1),4)+1)]
     ru2lb_pieces = [board[row+i][col-i] for i in range(-min(min(row,COL-col-1),4),min(min(ROW-row-1,col),4)+1)]
-    print(eval(row_pieces))
-    return check_win_piece_list(row_pieces,flag) or check_win_piece_list(col_pieces,flag) or check_win_piece_list(lu2rb_pieces,flag) or check_win_piece_list(ru2lb_pieces,flag)
+    # print("AI eval " if flag==AI_FLAG else "Player Eval")
+    # print("row ",eval(row_pieces))
+    # print("col ",eval(col_pieces))
+    # print("lu2rb ",eval(lu2rb_pieces))
+    # print("ru2lb ",eval(ru2lb_pieces))
+    return max(eval(row_pieces,flag)[0] ,eval(col_pieces,flag)[0],eval(lu2rb_pieces,flag)[0],eval(ru2lb_pieces,flag)[0])
+
+def get_eval1(board,flag):
+    value = 0
+    for i in fliter5_maps:
+        value += 99999*np.sum(convolve2d(board,i,mode='valid')==-5)
+    for i in fliter4_maps:
+        value += 1000*np.sum(convolve2d(board,i,mode='valid')==-4)
+    for i in fliter3_maps:
+        value += 100*np.sum(convolve2d(board,i,mode='valid')==-3)
+    for i in fliter2_maps:
+        value += 10*np.sum(convolve2d(board,i,mode='valid')==-2)
+    print("value   ",value)
+    return value
+
+
+
 MAX_DEPTH = 4
-AI_BEST_MOVE = None
+AI_BEST_MOVE = (0,0)
+
 def alpha_beta(board,depth,alpha,beta,row,col,flag):
-    #TODO: config how to eval
-    if check_win(board,row,col,flag) : 
-        return 100000000
-    if depth == 0:
-        return get_eval(board,row,col,flag)
+    global AI_BEST_MOVE
+
+    if check_win(board,row,col,flag) :
+        # return get_eval(board,row,col,flag)
+        return get_eval1(board,flag)
+    if depth <= 0:
+        # return get_eval(board,row,col,flag)
+        return get_eval1(board,flag)
     enabled_place = get_enabled_place(board)
+    # print("ai best ",AI_BEST_MOVE)
     if flag==AI_FLAG: #AI MAX
         for place in enabled_place:
             r = place[0]
@@ -205,9 +267,9 @@ def rect(point,color):
     left = point.col*w_cell
     top = point.row*h_cell
     pygame.draw.rect(window,color,(left,top,w_cell,h_cell))
-def circle(x,y,color):
-    c = x//w_cell
-    r = y//h_cell
+def circle(r,c,color):
+    # c = x//w_cell
+    # r = y//h_cell
     left = c*w_cell
     top = r*h_cell
     pygame.draw.circle(window,color,(left+w_cell/2,top+h_cell/2),w_cell/2-2)
@@ -221,11 +283,14 @@ class Board:
         print("place",rt,ct)
         self.board[rt][ct] = flag
 
+def copy_board(board):
+    copy_board = np.zeros((ROW,COL))
+
 
 quit = True
 clock = pygame.time.Clock()
 
-turn = AI_FLAG
+turn = PLAYER_FLAG
 
 BOARD = Board()
 
@@ -244,7 +309,7 @@ def check_win_piece_list(pieces,flag):
     return False
 def check_win(board,row,col,flag):
     row_pieces = board[row][(col-4 if col-4>=0 else 0):(col+5)]
-    eval(row_pieces)
+    # eval(row_pieces)
     col_pieces = [i[col] for i in board[(row-4 if row-4>=0 else 0):(row+5)]]
     lu2rb_pieces = [board[row+i][col+i] for i in range(-min(min(row,col),4),min(min(ROW-row-1,COL-col-1),4)+1)]
     ru2lb_pieces = [board[row+i][col-i] for i in range(-min(min(row,COL-col-1),4),min(min(ROW-row-1,col),4)+1)]
@@ -270,11 +335,19 @@ while quit:
                             continue
                         if turn == AI_FLAG:
                             color_t = AI_COLOR
-                            # alpha_beta(BOARD.board,MAX_DEPTH,float("-inf"),float("inf"),)
+                            enabled_place = get_enabled_place(BOARD.board)
+                            print("enabled_place",len(enabled_place))
+                            for place in enabled_place:
+                                board_next = BOARD.board.copy()
+                                board_next[tr][tc] = AI_FLAG
+                                alpha_beta(board_next,MAX_DEPTH,float("-inf"),float("inf"),place[0],place[1],turn)
+                            tr = AI_BEST_MOVE[0]
+                            tc = AI_BEST_MOVE[1]
                         elif turn == PLAYER_FLAG:
                             color_t = PLAYER_COLOR
                         BOARD.step(tc,tr,turn)
-                        circle(tx,ty,color_t)
+                        # get_eval(BOARD.board,tr,tc,turn)
+                        circle(tr,tc,color_t)
                         if check_win(BOARD.board,tr,tc,turn):
                             print(("AI" if turn==AI_FLAG else "PLAYER"),"win")
                         if turn == AI_FLAG:
