@@ -39,108 +39,6 @@ fliter2_maps = [
         np.array([[1,1]]),
         np.array([ [1], [1] ])
         ]
-score_map = {
-        "11111":10000, #AI连五
-        "22222":-10000, #PLAYER 连五
-        "022220":-9050,
-        "122220":-9040,
-        "0222020":-9040,
-        "0220220":-9040,
-        "011110":9030,
-        "211110":9020,
-        "0111010":9020,
-        "0110110":9020,
-
-        # "01": 17,#眠1连
-        # "001": 17,#眠1连
-        # "0001": 17,#眠1连
-        
-        # "0102":16,#眠1连，15
-        # "0012":15,#眠1连，15
-        # "01002":19,#眠1连，15
-        # "00102":17,#眠1连，15
-        # "00012":12,#眠1连，15
-
-        # "01000":21,#活1连，15
-        # "00100":19,#活1连，15
-        # "00010":17,#活1连，15
-        # "00001":15,#活1连，15
-
-        # #被堵住
-        # "0101":65,#眠2连，40
-        # "0110":65,#眠2连，40
-        # "011":65,#眠2连，40
-        # "0011":65,#眠2连，40
-        
-        # "01012":65,#眠2连，40
-        # "01102":65,#眠2连，40
-        # "00112":65,#眠2连，40
-
-        # "01010":75,#活2连，40
-        # "01100":75,#活2连，40
-        # "00110":75,#活2连，40
-        # "00011":75,#活2连，40
-        
-        # #被堵住
-        # "0111":150,#眠3连，100
-        
-        # "01112":150,#眠3连，100
-        
-        # "01101":1000,#活3连，130
-        # "01011":1000,#活3连，130
-        # "01110": 1000,#活3连
-        
-        # "01111":3000,#4连，300
-        # "11111":100000,
-        }
-
-def eval(pieces,flag=-1):
-    # assert isinstance(pieces,np.ndarray)
-    s=""
-    # score_map = {
-            # "11111":100000, #长连
-            # "011110":10000, #活四
-            # "011112":10000,     #冲四
-            # "0101110":10000,    #冲四
-            # "0110110":10000,    #冲四
-            # "01110":200,      #活三
-            # "010110":200,     #活三
-            # "001112" :50, #眠三
-            # "010112":50, #眠三
-            # "011012":50, #眠三
-            # "10011":50, #眠三
-            # "10101":50, #眠三
-            # "2011102":50, #眠三
-            # "00110":5, #活二
-            # "01010":5, #活二
-            # "010010":5, #活二
-            # "000112":3,#眠二
-            # "001012":3,#眠二
-            # "010012":3,#眠二
-            # "10001":3,#眠二
-            # "2010102":3,#眠二
-            # "2011002":3,#眠二
-            # "211112":-5,#死四
-            # "21112":-5,#死三
-            # "2112":-5 #死二
-            # }
-    for i in pieces:
-        if i == 0:
-            s+="0"
-        elif i == PLAYER_FLAG:
-            s+="2"
-        elif i == AI_FLAG:
-            s+="1"
-    rs = s[::-1]
-    max_score = -1
-    min_score = 10000000
-    for k,v in score_map.items():
-        if re.search(k,s) is not None or re.search(k,rs) is not None:
-            if v > max_score:
-                max_score = v
-            if v < min_score:
-                min_score = v
-    return max_score,min_score
 
 w = 1000
 h = 1000
@@ -153,98 +51,20 @@ FOCUS_BOARD_MIN_Y = 0
 FOCUS_BOARD_MAX_X = COL
 FOCUS_BOARD_MAX_Y = ROW
 
-WIN_AI = ["11111"]
-WIN_PLAYER = ["22222"]
-HUO4_AI = ["011110"]
-HUO4_PLAYER = ["022220"]
-CHONG4_AI = ["011112", "211110", "10111", "11011", "11101"]
-CHONG4_PLAYER = ["022221", "122220", "20222", "22022", "22202"]
-HUO3_AI = ["001110", "011100", "010110", "011010"]
-HUO3_PLAYER = ["002220", "022200", "020220", "022020"]
-MIAN3_AI = ["001112", "010112", "011012", "011102", "211100", "211010", "210110", "201110", "00111", "10011", "10101", "10110", "01011", "10011", "11001", "11010", "01101", "10101", "11001", "11100",]
-MIAN3_PLAYER = ["002221", "020221", "022021", "022201", "122200", "122020", "120220", "102220", "00222", "20022", "20202", "20220", "02022", "20022", "22002", "22020", "02202", "20202", "22002", "22200",]
-HUO2_AI = ["000110", "001010", "001100", "001100", "010100", "011000", "000110", "010010", "010100", "001010", "010010", "011000",]
-HUO2_PLAYER = ["000220", "002020", "002200", "002200", "020200", "022000", "000220", "020020", "020200", "002020", "020020", "022000",]
-MIAN2_AI = ["000112", "001012", "010012", "10001", "2010102", "2011002", "211000", "210100", "210010", "2001102"]
-MIAN2_PLAYER = ["000221", "002021", "020021", "20002", "1020201", "1022001", "122000", "120200", "120020", "1002201"]
-# def computeScore() {
-        # score = 0;
-        # for (int i = 0; i < BOARD_SIZE; i++) {
-            # for (int j = 0; j < BOARD_SIZE; j++) {
-                # if (board[i][j] != BLANK) {
-                    # List<String> list = getString(i, j);
-                    # if (checkSituation(AI, list, WIN)) {
-                        # score += 100000000;
-                    # }
-                    # if (checkSituation(PLAYER, list, WIN)) {
-                        # score += -100000000;
-                    # }
-                    # if (checkSituation(AI, list, HUO4)) {
-                        # score += 10000000;
-                    # }
-                    # if (checkSituation(PLAYER, list, HUO4)) {
-                        # score += -10000000;
-                    # }
-                    # if (checkSituation(AI, list, CHONG4)) {
-                        # score += 1000000;
-                    # }
-                    # if (checkSituation(PLAYER, list, CHONG4)) {
-                        # score += -1000000;
-                    # }
-                    # if (checkSituation(AI, list, HUO3)) {
-                        # score += 100000;
-                    # }
-                    # if (checkSituation(PLAYER, list, HUO3)) {
-                        # score += -100000;
-                    # }
-                    # if (checkSituation(AI, list, MIAN3)) {
-                        # score += 10000;
-                    # }
-                    # if (checkSituation(PLAYER, list, MIAN3)) {
-                        # score += -10000;
-                    # }
-                    # if (checkSituation(AI, list, HUO2)) {
-                        # score += 1000;
-                    # }
-                    # if (checkSituation(PLAYER, list, HUO2)) {
-                        # score += -1000;
-                    # }
-                    # if (checkSituation(AI, list, MIAN2)) {
-                        # score += 100;
-                    # }
-                    # if (checkSituation(PLAYER, list, MIAN2)) {
-                        # score += -100;
-                    # }
-                    # if (checkSituation(AI, list, OL1)) {
-                        # score += 10;
-                    # }
-                    # if (checkSituation(PLAYER, list, OL1)) {
-                        # score += -10;
-                    # }
-                    # if (checkSituation(AI, list, NONE)) {
-                        # score += 1;
-                    # }
-                    # if (checkSituation(PLAYER, list, NONE)) {
-                        # score += -1;
-                    # }
-                # }
-            # }
-        # }
-        # return score;
-    # }
-
 def check_has_neibor(board,i,j):
     h,w = board.shape[0],board.shape[1]
-    flag = True
-    if (i>0 and board[i-1][j]==0) and (i<h-1 and board[i+1][j]==0) and (j>0 and board[i][j-1]==0) and (j<w-1 and board[i][j+1]==0):
-        return False
+    try:
+        if board[i-1][j-1] == 0 and board[i-1][j]==0 and board[i-1][j+1]==0 and board[i][j-1] == 0 and board[i][j]==0 and board[i][j+1]==0 and board[i+1][j-1] == 0 and board[i+1][j]==0 and board[i+1][j+1]==0 :
+            return False
+    except:
+        return True
     return True
 def get_enabled_place(board):
     ay,ax = np.where(board!=0)
-    search_min_x = max(min(ax) - 1,0)
-    search_max_x = min(max(ax) + 1,COL-1)
-    search_min_y = max(min(ay) - 1,0)
-    search_max_y = min(max(ay) + 1,ROW-1)
+    search_min_x = max(min(ax) - 2,0)
+    search_max_x = min(max(ax) + 2,COL-1)
+    search_min_y = max(min(ay) - 2,0)
+    search_max_y = min(max(ay) + 2,ROW-1)
     enabled_place = []
     for i in range(search_min_y,search_max_y):
         for j in range(search_min_x,search_max_x):
@@ -406,38 +226,54 @@ def eval2(pieces):
             s+="2"
         elif i == AI_FLAG:
             s+="1"
-    # rs = s[::-1]
     for k,v in eval_map.items():
-        # if re.search(k,s) is not None or re.search(k,rs) is not None:
         if re.search(k,s) is not None:
             score += v
     return score
 
-def get_eval2(board,row,col):
-    row_pieces = board[row][(col-4 if col-4>=0 else 0):(col+5)]
-    col_pieces = [i[col] for i in board[(row-4 if row-4>=0 else 0):(row+5)]]
-    lu2rb_pieces = [board[row+i][col+i] for i in range(-min(min(row,col),4),min(min(ROW-row-1,COL-col-1),4)+1)]
-    ru2lb_pieces = [board[row+i][col-i] for i in range(-min(min(row,COL-col-1),4),min(min(ROW-row-1,col),4)+1)]
-    score = eval2(row_pieces)+eval2(col_pieces)+eval2(lu2rb_pieces)+eval2(ru2lb_pieces)
+def get_eval2(board,row,col,mark):
+    score = 0
+    if mark[row,col,0]==0:
+        row_pieces = board[row]
+        mark[row,:,0] = 1
+        score += eval2(row_pieces)
+    if mark[row,col,1]==0:
+        col_pieces = board[:,col]
+        mark[:,col,1] = 1
+        score += eval2(col_pieces)
+    if mark[row,col,2]==0:
+        lu2rb_pieces = np.diagonal(board,offset=col-row)
+        offset1 = col-row
+        index1 = np.array([[i,i+offset1] for i in range(ROW) if i+offset1<COL]).T
+        mark[index1[0],index1[1],2] = 1
+        score += eval2(lu2rb_pieces)
+    if mark[row,col,3]==0:
+        offset2 = (COL-1)-col-row
+        ru2lb_pieces = np.diagonal(np.flip(board,axis=1),offset=offset2)
+        index2 = np.array([[i,COL-1-i-offset2] for i in range(ROW) if COL-1-i-offset2>=0 and COL-1-i-offset2<COL]).T
+        mark[index2[0],index2[1],3] = 1
+        score += eval2(ru2lb_pieces)
     return score
 
 def get_test_eval(board):
     h,w = board.shape[0],board.shape[1]
+    mark = np.zeros((h,w,4)) #0 line; 1 col ; 2 lefttop2rightbottom; 3 righttop2leftbottom
     score = 0
     for i in range(h):
         for j in range(w):
             if board[i][j]!=0:
-                score += get_eval2(board,i,j)
+                score += get_eval2(board,i,j,mark)
+                # print(mark)
     return score
-MAX_DEPTH = 2
+MAX_DEPTH = 3
 AI_BEST_MOVE = None
+
+def check_win_test(board):
+    pass
 
 def alpha_beta(board,depth,alpha,beta,flag):
     global AI_BEST_MOVE
 
-    # if check_win(board,row,col,flag) :
-        # return get_eval(board,row,col,flag)
-        # return get_eval1(board,flag)
     if depth <= 0:
         # return get_eval(board,row,col,flag)
         return get_test_eval(board)
@@ -447,32 +283,38 @@ def alpha_beta(board,depth,alpha,beta,flag):
         for place in enabled_place:
             r = place[0]
             c = place[1]
-            # board_next = board.copy()
-            # board_next[r][c] = PLAYER_FLAG
             board[r][c] = AI_FLAG
-            value = alpha_beta(board,depth-1,alpha,beta,neflag(flag))
+            if check_win(board,r,c,AI_FLAG):
+                value = 10000000000
+                print("asjdlkasjdklasjd","AI")
+            else:
+                value = alpha_beta(board,depth-1,alpha,beta,neflag(flag))
             board[r][c] = 0
             if value > alpha:
                 alpha = value
                 if depth == MAX_DEPTH:
                     AI_BEST_MOVE = place
             if beta <= alpha:
+                # print("break max")
                 break
         return alpha
     else:#PLAYER MIN
         for place in enabled_place:
             r = place[0]
             c = place[1]
-            # board_next = board.copy()
-            # board_next[r][c] = AI_FLAG
             board[r][c] = PLAYER_FLAG
-            value = alpha_beta(board,depth-1,alpha,beta,neflag(flag))
+            if check_win(board,r,c,PLAYER_FLAG):
+                value = -1000000000000
+                print("asjdlkasjdklasjd","PLAYER")
+            else:
+                value = alpha_beta(board,depth-1,alpha,beta,neflag(flag))
             board[r][c] = 0
             if value < beta:
                 beta = value
                 if depth == MAX_DEPTH:
                     AI_BEST_MOVE = place
             if beta <= alpha:
+                # print("break min")
                 break
         return beta
 class AI:
@@ -511,7 +353,7 @@ class Board:
     def __init__(self):
         # self.board = [[0]*COL for i in range(ROW)]
         self.board = np.zeros((ROW,COL))
-    def step(self,ct,rt,flag):
+    def step(self,rt,ct,flag):
         # ct = int(x//w_cell)
         # rt = int(y//h_cell)
         print("place",rt,ct)
@@ -574,12 +416,12 @@ while quit:
                             # for place in enabled_place:
                                 # board_next = BOARD.board.copy()
                                 # board_next[tr][tc] = AI_FLAG
-                            alpha_beta(BOARD.board.copy(),MAX_DEPTH,float("-inf"),float("inf"),turn)
+                            alpha_beta(BOARD.board.copy(),MAX_DEPTH,float("-inf"),float("inf"),AI_FLAG)
                             tr = AI_BEST_MOVE[0]
                             tc = AI_BEST_MOVE[1]
                         elif turn == PLAYER_FLAG:
                             color_t = PLAYER_COLOR
-                        BOARD.step(tc,tr,turn)
+                        BOARD.step(tr,tc,turn)
                         # get_eval(BOARD.board,tr,tc,turn)
                         circle(tr,tc,color_t)
                         if check_win(BOARD.board,tr,tc,turn):
