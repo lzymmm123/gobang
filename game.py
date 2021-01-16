@@ -18,11 +18,6 @@ h = 1000
 ROW = 20
 COL = 20
 size = (w,h)
-direct = "left"
-FOCUS_BOARD_MIN_X = 0
-FOCUS_BOARD_MIN_Y = 0
-FOCUS_BOARD_MAX_X = COL
-FOCUS_BOARD_MAX_Y = ROW
 
 def check_has_neibor(board,i,j):
     h,w = board.shape[0],board.shape[1]
@@ -56,30 +51,7 @@ def get_eval(board,row,col,flag):
     col_pieces = [i[col] for i in board[(row-4 if row-4>=0 else 0):(row+5)]]
     lu2rb_pieces = [board[row+i][col+i] for i in range(-min(min(row,col),4),min(min(ROW-row-1,COL-col-1),4)+1)]
     ru2lb_pieces = [board[row+i][col-i] for i in range(-min(min(row,COL-col-1),4),min(min(ROW-row-1,col),4)+1)]
-    # print("AI eval " if flag==AI_FLAG else "Player Eval")
-    # print("row ",eval(row_pieces))
-    # print("col ",eval(col_pieces))
-    # print("lu2rb ",eval(lu2rb_pieces))
-    # print("ru2lb ",eval(ru2lb_pieces))
     return max(eval(row_pieces,flag)[0] ,eval(col_pieces,flag)[0],eval(lu2rb_pieces,flag)[0],eval(ru2lb_pieces,flag)[0])
-
-def get_eval1(board,flag):
-    value = 0
-    for i in fliter5_maps:
-        value += 10000*np.sum(convolve2d(board,i,mode='valid')==-5)
-        value += -8000*np.sum(convolve2d(board,i,mode='valid')==5)
-    for i in fliter4_maps:
-        value += 1000*np.sum(convolve2d(board,i,mode='valid')==-4)
-        value += -800*np.sum(convolve2d(board,i,mode='valid')==4)
-    for i in fliter3_maps:
-        value += 100*np.sum(convolve2d(board,i,mode='valid')==-3)
-        value += -80*np.sum(convolve2d(board,i,mode='valid')==3)
-    for i in fliter2_maps:
-        value += 10*np.sum(convolve2d(board,i,mode='valid')==-2)
-        value += -8*np.sum(convolve2d(board,i,mode='valid')==2)
-    # print("value   ",value)
-    return value
-
 
 eval_map  ={
         "11111":100000000, "22222":-100000000, "011110":10000000, "022220":-10000000, "011112":1000000, "211110":1000000, "10111":1000000, "11011":1000000, "11101":1000000, "022221":-1000000, "122220":-1000000, "20222":-1000000, "22022":-1000000, "22202":-1000000, "001110":100000, "011100":100000, "010110":100000, "011010":100000, "002220":-100000, "022200":-100000, "020220":-100000, "022020":-100000, "001112":10000, "010112":10000, "011012":10000, "011102":10000, "211100":10000, "211010":10000, "210110":10000, "201110":10000, "00111":10000, "10011":10000, "10101":10000, "10110":10000, "01011":10000, "10011":10000, "11001":10000, "11010":10000, "01101":10000, "10101":10000, "11001":10000, "11100":10000, "002221":-10000, "020221":-10000, "022021":-10000, "022201":-10000, "122200":-10000, "122020":-10000, "120220":-10000, "102220":-10000, "00222":-10000, "20022":-10000, "20202":-10000, "20220":-10000, "02022":-10000, "20022":-10000, "22002":-10000, "22020":-10000, "02202":-10000, "20202":-10000, "22002":-10000, "22200":-10000, "000110":1000, "001010":1000, "001100":1000, "001100":1000, "010100":1000, "011000":1000, "000110":1000, "010010":1000, "010100":1000, "001010":1000, "010010":1000, "011000":1000, "000220":-1000, "002020":-1000, "002200":-1000, "002200":-1000, "020200":-1000, "022000":-1000, "000220":-1000, "020020":-1000, "020200":-1000, "002020":-1000, "020020":-1000, "022000":-1000, "000112":100, "001012":100, "010012":100, "10001":100, "2010102":100, "2011002":100, "211000":100, "210100":100, "210010":100, "2001102":100, "000221":-100, "002021":-100, "020021":-100, "20002":-100, "1020201":-100, "1022001":-100, "122000":-100, "120200":-100, "120020":-100, "1002201":-100,
@@ -131,22 +103,16 @@ def get_test_eval(board):
         for j in range(w):
             if board[i][j]!=0:
                 score += get_eval2(board,i,j,mark)
-                # print(mark)
     return score
+
 MAX_DEPTH = 3
 AI_BEST_MOVE = None
-
-def check_win_test(board):
-    pass
-
 def alpha_beta(board,depth,alpha,beta,flag):
     global AI_BEST_MOVE
 
     if depth <= 0:
-        # return get_eval(board,row,col,flag)
         return get_test_eval(board)
     enabled_place = get_enabled_place(board)
-    # print("ai best ",AI_BEST_MOVE)
     if flag==AI_FLAG: #AI MAX
         for place in enabled_place:
             r = place[0]
@@ -180,15 +146,8 @@ def alpha_beta(board,depth,alpha,beta,flag):
                 if depth == MAX_DEPTH:
                     AI_BEST_MOVE = place
             if beta <= alpha:
-                # print("break min")
                 break
         return beta
-class AI:
-    def __init__(self,flag):
-        self.path = []
-        self.flag = flag
-    def expand(self,depth):
-        pass
 
 pygame.init()
 window = pygame.display.set_mode(size)
@@ -215,16 +174,11 @@ def circle(r,c,color):
     pygame.draw.circle(window,color,(left+w_cell/2,top+h_cell/2),w_cell/2-2)
 class Board:
     def __init__(self):
-        # self.board = [[0]*COL for i in range(ROW)]
         self.board = np.zeros((ROW,COL))
     def step(self,rt,ct,flag):
-        # ct = int(x//w_cell)
-        # rt = int(y//h_cell)
         print("place",rt,ct)
         self.board[rt][ct] = flag
 
-def copy_board(board):
-    copy_board = np.zeros((ROW,COL))
 
 
 quit = True
@@ -236,20 +190,17 @@ BOARD = Board()
 
 def draw_board():
     for i in range(COL):
-        pygame.draw.line(window,(255,255,255),(i*w_cell,0),(i*w_cell,w))
+        pygame.draw.line(window,(255,255,255),(i*w_cell+w_cell/2,0),(i*w_cell+w_cell/2,w))
     for i in range(ROW):
-        pygame.draw.line(window,(255,255,255),(0,i*h_cell),(h,i*h_cell))
+        pygame.draw.line(window,(255,255,255),(0,i*h_cell+h_cell/2),(h,i*h_cell+h_cell/2))
 
 def check_win_piece_list(pieces,flag):
-    # assert isinstance(pieces,list)
-    # assert len(pieces)<=9
     for i in range(len(pieces)-4):
         if sum(pieces[i:i+5]) == flag*5:
             return True
     return False
 def check_win(board,row,col,flag):
     row_pieces = board[row][(col-4 if col-4>=0 else 0):(col+5)]
-    # eval(row_pieces)
     col_pieces = [i[col] for i in board[(row-4 if row-4>=0 else 0):(row+5)]]
     lu2rb_pieces = [board[row+i][col+i] for i in range(-min(min(row,col),4),min(min(ROW-row-1,COL-col-1),4)+1)]
     ru2lb_pieces = [board[row+i][col-i] for i in range(-min(min(row,COL-col-1),4),min(min(ROW-row-1,col),4)+1)]
@@ -258,6 +209,7 @@ def check_win(board,row,col,flag):
 previous_r = -1
 previous_c = -1
 print("now turn ",("AI " if turn==AI_FLAG else "PLAYER"))
+draw_board()
 while quit:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -292,11 +244,6 @@ while quit:
                         elif turn == PLAYER_FLAG:
                             turn = AI_FLAG
                         print("now turn ",("AI " if turn==AI_FLAG else "PLAYER"))
-                    elif index==2:
-                        if BOARD.board[tr][tc]!=0 and tr==previous_r and tc==previous_c:
-                            pass
-    # print(pygame.mouse.get_pos())
-    # print(pygame.mouse.get_focused())
-    draw_board()
+    # draw_board()
 
     pygame.display.update()
